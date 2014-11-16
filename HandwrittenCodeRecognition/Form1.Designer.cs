@@ -42,15 +42,15 @@
             // 
             this.imageBox1.Location = new System.Drawing.Point(12, 62);
             this.imageBox1.Name = "imageBox1";
-            this.imageBox1.Size = new System.Drawing.Size(644, 655);
+            this.imageBox1.Size = new System.Drawing.Size(625, 587);
             this.imageBox1.TabIndex = 2;
             this.imageBox1.TabStop = false;
             // 
             // imageBox2
             // 
-            this.imageBox2.Location = new System.Drawing.Point(717, 62);
+            this.imageBox2.Location = new System.Drawing.Point(693, 62);
             this.imageBox2.Name = "imageBox2";
-            this.imageBox2.Size = new System.Drawing.Size(620, 655);
+            this.imageBox2.Size = new System.Drawing.Size(585, 587);
             this.imageBox2.TabIndex = 2;
             this.imageBox2.TabStop = false;
             // 
@@ -82,7 +82,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1349, 729);
+            this.ClientSize = new System.Drawing.Size(1284, 661);
             this.Controls.Add(this.normalise);
             this.Controls.Add(this.upload);
             this.Controls.Add(this.imageBox2);
