@@ -54,11 +54,11 @@ namespace HandwrittenCodeRecognition
 
             Image<Gray, byte> foreground = final - bg;
             Image<Gray, byte> thresh = new Image<Gray,byte>(foreground.Width, foreground.Height);
-            CvInvoke.cvThreshold(foreground, thresh , 0, 255, Emgu.CV.CvEnum.THRESH.CV_THRESH_OTSU);
+            CvInvoke.cvThreshold(foreground, thresh , 125, 255, Emgu.CV.CvEnum.THRESH.CV_THRESH_OTSU);
             
             
 
-            imageBox1.Image = final;
+            imageBox1.Image = thresh;
             imageBox2.Image = final-bg;
         }
 
