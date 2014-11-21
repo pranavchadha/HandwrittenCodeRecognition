@@ -22,7 +22,7 @@ namespace HandwrittenCodeRecognition
         public Form1()
         {
             InitializeComponent();
-            _ocr = new Tesseract("C://Users//Pranav Chadha//Documents//GitHub//HandwrittenCodeRecognition//HandwrittenCodeRecognition", "eng_h", Tesseract.OcrEngineMode.OEM_TESSERACT_CUBE_COMBINED);
+            _ocr = new Tesseract("C://Users//Pranav Chadha//Documents//GitHub//HandwrittenCodeRecognition//HandwrittenCodeRecognition", "eng", Tesseract.OcrEngineMode.OEM_TESSERACT_CUBE_COMBINED);
         }
 
         public void open()
@@ -91,7 +91,7 @@ namespace HandwrittenCodeRecognition
             Image<Gray, byte> houghlines = new Image<Gray, byte>(thresh.Size);
 
             thresh = thresh.Not();
-            //thresh.Save("thresh.jpeg");
+
             LineSegment2D[][] hough = thresh.HoughLines(180, 120, 1, Math.PI / 180, 20, 70, 10);
             double angle = 0;
             for (int i = 0; i < hough[0].Length; i++)
@@ -100,14 +100,16 @@ namespace HandwrittenCodeRecognition
                 angle += Math.Atan2(hough[0][i].P2.Y - hough[0][i].P1.Y, hough[0][i].P2.X - hough[0][i].P1.X);
             }
 
-            Console.Out.WriteLine(hough[0][1].P1);
-            Console.Out.WriteLine(hough[0][1].P2);
+            //Console.Out.WriteLine(hough[0][1].P1);
+            //Console.Out.WriteLine(hough[0][1].P2);
             angle = (angle / hough[0].Length) * 180 / Math.PI;
             Console.Out.WriteLine(angle);
 
 
             Point center = new Point((int)((thresh.Width - 1)/2), (int)((thresh.Height - 1)/2));
-            thresh = thresh.Rotate(-angle, new Gray(255));
+            //thresh = thresh.Rotate(-angle, new Gray(255));
+
+            thresh.Save("thresh1.tif");
 
             _ocr.Recognize(thresh);
             Tesseract.Charactor[] charactors = _ocr.GetCharactors();
