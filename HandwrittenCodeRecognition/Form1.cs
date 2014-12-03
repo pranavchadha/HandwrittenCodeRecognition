@@ -6,6 +6,8 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using System.IO;
+using System.Text.RegularExpressions;
 
 using Emgu.CV;
 using Emgu.CV.OCR;
@@ -103,7 +105,7 @@ namespace HandwrittenCodeRecognition
             imageBox1.Image = thresh.Copy();
             Image<Gray, byte> houghlines = new Image<Gray, byte>(thresh.Size);
 
-            LineSegment2D[][] hough = thresh.HoughLines(180, 120, 1, Math.PI / 180, 20, 60, 10);
+            LineSegment2D[][] hough = thresh.HoughLines(180, 120, 1, Math.PI / 180, 20, 50, 10);
             //LineSegment2D[][] hough = thresh.HoughLines(180, 120, Math.PI / 36, 1, 20, 30, 10);
             double angle, angle1 = 0;
             double angle2 = 0;
@@ -193,89 +195,71 @@ namespace HandwrittenCodeRecognition
             imageBox2.Image = thresh;
             imageBox1.Image = second;
 
-            //double x = first.Height / first.Width;
-            //Image<Gray, byte> final = new Image<Gray, byte>((int)(first.Width), (int)(first.Height));
             
-            //CvInvoke.cvResize(first, final, Emgu.CV.CvEnum.INTER.CV_INTER_AREA);
-            //final = final.Not();
-            //Image<Gray, byte> bg = new Image<Gray, byte>(final.Width, final.Height);
-            //IntPtr se = CvInvoke.cvCreateStructuringElementEx(11, 11, 6, 6, Emgu.CV.CvEnum.CV_ELEMENT_SHAPE.CV_SHAPE_ELLIPSE, IntPtr.Zero);
-            //CvInvoke.cvErode(final, bg, se, 1);
-
-            //Image<Gray, byte> foreground = final - bg;
-            //Image<Gray, byte> thresh = new Image<Gray, byte>(foreground.Width, foreground.Height);
-            //CvInvoke.cvThreshold(foreground, thresh, 100, 255, Emgu.CV.CvEnum.THRESH.CV_THRESH_OTSU);
-            ////CvInvoke.cvAdaptiveThreshold(final, thresh, 255, Emgu.CV.CvEnum.ADAPTIVE_THRESHOLD_TYPE.CV_ADAPTIVE_THRESH_MEAN_C, Emgu.CV.CvEnum.THRESH.CV_THRESH_BINARY, 25, 10);
-            ////thresh = final.ThresholdAdaptive(new Gray(255), Emgu.CV.CvEnum.ADAPTIVE_THRESHOLD_TYPE.CV_ADAPTIVE_THRESH_MEAN_C, Emgu.CV.CvEnum.THRESH.CV_THRESH_OTSU, 25, new Gray(10));
-
-
-
-            ////imageBox1.Image = foreground;
-
-            //Image<Gray, byte> second = new Image<Gray, byte>(final.Size);
-            //thresh.CopyTo(second);
-
-            //Contour<Point> cont = thresh.FindContours(Emgu.CV.CvEnum.CHAIN_APPROX_METHOD.CV_CHAIN_APPROX_NONE, Emgu.CV.CvEnum.RETR_TYPE.CV_RETR_CCOMP);
-            //int count = 0;
-            //int total = 0;
-
-            //for (; cont != null;cont = cont.HNext)
-            //{
-            //    total++;
-            //    //cont = cont.ApproxPoly(0.0025);
-            //    second.Draw(cont.BoundingRectangle, new Gray(255), 1);
-            //    if (cont.BoundingRectangle.Height * cont.BoundingRectangle.Width < 10)
-            //    {
-                    
-            //        count++;
-            //        CvInvoke.cvDrawContours(thresh, cont, new MCvScalar(0), new MCvScalar(0), 0, -1, Emgu.CV.CvEnum.LINE_TYPE.EIGHT_CONNECTED, new Point(0, 0));
-            //    }
-            //}
-
-            //Console.Out.WriteLine(count);
-            //Console.Out.WriteLine(total);
-
-            //Image<Gray, byte> houghlines = new Image<Gray, byte>(thresh.Size);
-            
-            //thresh = thresh.Not();
-
-            //LineSegment2D[][] hough = thresh.HoughLines(180, 120, 1, Math.PI / 180, 20, 70, 10);
-            //double angle = 0;
-            //for (int i = 0; i < hough[0].Length; i++)
-            //{
-            //    houghlines.Draw(hough[0][i], new Gray(255), 2);
-            //    angle += Math.Atan2(hough[0][i].P2.Y - hough[0][i].P1.Y, hough[0][i].P2.X - hough[0][i].P1.X);
-            //}
-
-            ////Console.Out.WriteLine(hough[0][1].P1);
-            ////Console.Out.WriteLine(hough[0][1].P2);
-            //angle = (angle / hough[0].Length) * 180 / Math.PI;
-            //Console.Out.WriteLine(angle);
-
-
-            //Point center = new Point((int)((thresh.Width - 1)/2), (int)((thresh.Height - 1)/2));
-            ////thresh = thresh.Rotate(-angle, new Gray(255));
+            text = postprocess(text);
+            Console.Out.WriteLine(text);
 
             
-
-            //_ocr.Recognize(thresh);
-            //Tesseract.Charactor[] charactors = _ocr.GetCharactors();
-            //foreach (Tesseract.Charactor c in charactors)
-            //{
-            //    thresh.Draw(c.Region, new Gray(100), 1);
-            //}
-
             
-
-            ////String text = String.Concat( Array.ConvertAll(charactors, delegate(Tesseract.Charactor t) { return t.Text; }) );
-            //String text = _ocr.GetText();
-            //Console.Out.WriteLine("------------------------");
-            //Console.Out.WriteLine(text);
-            //Console.Out.WriteLine("------------------------");
-            //imageBox2.Image = thresh;
-            //imageBox1.Image = second;
 
         }
+
+        public String postprocess(String a)
+        {
+            String[] freq = new String[] { "#include<stdio.h>", "#include<string.h>", "#include<stdlib.h>", "#include<stdlib.h>", "printf", "scanf", "void", "main", "char"};
+            a = ambigs(a);
+            a = ambigs(a);
+
+
+            //Console.Out.WriteLine(code);
+
+            var reader = new StringReader(a);
+            String line;
+            int counter = 0;
+            int min;
+            String str = "";
+            String newcode = "";
+            while ((line = reader.ReadLine()) != null)
+            {
+                String[] words = line.Split(new char[] { ',', ';', '[', ' ', '"', '{', '(', ')' }, StringSplitOptions.RemoveEmptyEntries);
+                Console.Out.WriteLine("original line: " + line);
+                foreach (String word in words)
+                {
+
+                    min = 1000;
+                    foreach (String item in freq)
+                    {
+
+                        int lev = levenshtein(word, item);
+                        if (lev < min)
+                        {
+                            min = lev;
+                            str = item;
+                        }
+                    }
+                    if (min < 3)
+                    {
+                        line = line.Replace(word, str);
+                    }
+
+                    
+                }
+                newcode += line;
+                newcode += "\n";
+                Console.Out.WriteLine("final: " + line);
+            }
+
+            //int flag = 0;
+            //for (int i = 0; i < newcode.Length; i++)
+            //{
+            //    if(newcode[i] == ')')
+            //    {
+            //        i++;
+            //        while(newcode[i] != '{')
+            //    }
+            return newcode;
+        }
+
 
         private void button1_Click(object sender, EventArgs e)
         {
@@ -339,6 +323,51 @@ namespace HandwrittenCodeRecognition
 
         }
 
+        public String ambigs(String a)
+        {
+            String code = null;
+            for (int i = 0; i < a.Length; i++)
+            {
+                //Console.Out.WriteLine(a[i]);
+                if ((a[i] == '.' && a[i + 1] == 'l') || (a[i] == '.' && a[i + 1] == '1') || (a[i] == '.' && a[i + 1] == '"'))
+                {
+                    Console.Out.WriteLine("in");
+                    code += "i";
+
+                    i++;
+                }
+                else if (a[i] == '.' && a[i + 1] == ',')
+                {
+                    code += ";";
+                    i++;
+                }
+
+                else if ((a[i] == '.' && a[i + 1] == '*' && a[i + 2] == '.') || (a[i] == '.' && a[i + 1] == '/' && a[i + 2] == '.'))
+                {
+                    code += "%";
+                    i += 2;
+                }
+
+                else if ((a[i] == ';' && a[i + 1] == 'n' && a[i + 2] == 't'))
+                {
+                    code += "int";
+                    i += 2;
+                }
+
+                else if ((a[i] == ';' && a[i + 1] == 'n' && a[i + 2] == 'c'))
+                {
+                    code += "inc";
+                    i += 2;
+                }
+
+                else
+                {
+                    code += a[i];
+                }
+            }
+
+            return code;
+        }
         
     }
 }
