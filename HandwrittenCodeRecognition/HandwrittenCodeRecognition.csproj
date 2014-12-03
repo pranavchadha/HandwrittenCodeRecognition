@@ -64,10 +64,19 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="Form2.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form2.Designer.cs">
+      <DependentUpon>Form2.cs</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form2.resx">
+      <DependentUpon>Form2.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -78,34 +87,40 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <None Include="eng.cube.bigrams">
+    <None Include="tess\eng.cube.bigrams">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="eng.cube.fold">
+    <None Include="tess\eng.cube.fold">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="eng.cube.lm">
+    <None Include="tess\eng.cube.lm">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="eng.cube.nn">
+    <None Include="tess\eng.cube.nn">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="eng.cube.params">
+    <None Include="tess\eng.cube.params">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="eng.cube.size">
+    <None Include="tess\eng.cube.size">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="eng.cube.word-freq">
+    <None Include="tess\eng.cube.word-freq">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="eng.tesseract_cube.nn">
+    <None Include="tess\eng.tesseract_cube.nn">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="eng.traineddata">
+    <None Include="tess\eng.traineddata">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="eng_h.traineddata">
+    <None Include="tess\eng_h.traineddata">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="tess\pc.traineddata">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="tess\tla.traineddata">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="Properties\Settings.settings">
@@ -243,6 +258,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
