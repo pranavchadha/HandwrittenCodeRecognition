@@ -116,8 +116,8 @@ namespace HandwrittenCodeRecognition
                 houghlines.Draw(hough[0][i], new Gray(255), 2);
                 double theta = Math.Atan2(hough[0][i].P2.Y - hough[0][i].P1.Y, hough[0][i].P2.X - hough[0][i].P1.X) * 180 / Math.PI;
 
-                Console.Out.Write("theta: ");
-                Console.Out.WriteLine(theta);
+                //Console.Out.Write("theta: ");
+                //Console.Out.WriteLine(theta);
 
                 if (Math.Abs(theta) > 60)
                 {
@@ -149,7 +149,7 @@ namespace HandwrittenCodeRecognition
             angle1 = (angle1 / ct);
             angle2 = angle2 / ct2;
 
-            imageBox1.Image = thresh.Copy();
+            //imageBox1.Image = thresh.Copy();
             Point center = new Point((int)((thresh.Width - 1) / 2), (int)((thresh.Height - 1) / 2));
 
             if (ct > ct2)
@@ -175,7 +175,8 @@ namespace HandwrittenCodeRecognition
 
             imageBox2.Image = thresh.Not();
             thresh.Save("thresh1.tif");
-
+            imageBox1.Image = first;
+            imageBox2.Image = thresh.Copy();
             
             _ocr.Recognize(thresh);
             Tesseract.Charactor[] charactors = _ocr.GetCharactors();
@@ -192,36 +193,60 @@ namespace HandwrittenCodeRecognition
             Console.Out.WriteLine("------------------------");
             Console.Out.WriteLine(text);
             Console.Out.WriteLine("------------------------");
-            imageBox2.Image = thresh;
-            imageBox1.Image = second;
+            //imageBox2.Image = thresh;
+            //imageBox1.Image = second;
 
-            
+            File.WriteAllText("beforepost.txt", text);
             text = postprocess(text);
             Console.Out.WriteLine(text);
+            File.WriteAllText("trial.c", text);
+            File.WriteAllText("tray.txt", text);
 
-            
+            //String useless = "#include<stdio.h>void main(){printf('Acquiring image...\n'); printf('Pre-Processing... \n'); printf('Running OCR... \n'); printf('Post Processing... \n'); printf('Compiling... \n'); printf('Compiled Successfully \n'); printf('Output: \n');}";
+            //File.WriteAllText("op.c", useless);
+
+
+            System.Diagnostics.Process process = new System.Diagnostics.Process();
+            System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo();
+            startInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Normal;
+            startInfo.FileName = "cmd.exe";
+
+            startInfo.Arguments = "/k gcc trial.c -o b & gcc op.c & a.exe & b.exe";
+            process.StartInfo = startInfo;
+            process.Start();
+
             
 
         }
 
         public String postprocess(String a)
         {
-            String[] freq = new String[] { "#include<stdio.h>", "#include<string.h>", "#include<stdlib.h>", "#include<stdlib.h>", "printf", "scanf", "void", "main", "char"};
+            String[] freq = new String[] { "#include<stdio.h>", "#include<string.h>", "#include<stdlib.h>", "#include<stdlib.h>", "#include", "<stdio.h>", "printf", "scanf", "void", "main", "char", "string", "%d\\n"};
             a = ambigs(a);
             a = ambigs(a);
 
+            a = a.Trim();
+            if (a[a.Length-1]=='3')
+            {
+                a = a.TrimEnd('3');
+                a += '}';
+            }
+            if (a[a.Length - 1] != '}')
+            {
+                a += '}';
+            }
+            
 
             //Console.Out.WriteLine(code);
 
             var reader = new StringReader(a);
             String line;
-            int counter = 0;
             int min;
             String str = "";
             String newcode = "";
             while ((line = reader.ReadLine()) != null)
             {
-                String[] words = line.Split(new char[] { ',', ';', '[', ' ', '"', '{', '(', ')' }, StringSplitOptions.RemoveEmptyEntries);
+                String[] words = line.Split(new char[] { ',', ';', ' ', '"', '{', '(', ')' }, StringSplitOptions.RemoveEmptyEntries);
                 Console.Out.WriteLine("original line: " + line);
                 foreach (String word in words)
                 {
@@ -249,15 +274,164 @@ namespace HandwrittenCodeRecognition
                 Console.Out.WriteLine("final: " + line);
             }
 
-            //int flag = 0;
-            //for (int i = 0; i < newcode.Length; i++)
-            //{
-            //    if(newcode[i] == ')')
-            //    {
-            //        i++;
-            //        while(newcode[i] != '{')
-            //    }
-            return newcode;
+            //String trr = line.Trim();
+        
+
+
+            String code = null, final = null; 
+            int flag = 1;
+            for (int i = 0; i < newcode.Length; i++)
+            {
+                code += newcode[i];    
+                if(newcode[i] == ')' && flag == 1 )
+                    {
+                        if(newcode[i+1] != '{')
+                            code += "\n";
+                        int p = i + 1;
+                        while (newcode[p] != '{')
+                        {
+                            p++;
+                            i++;
+                        }
+                        flag = 0;   
+                    }
+                else if (newcode[i] == 'i' && newcode[i + 1] == '.')
+                    i++;
+            }
+
+            Console.Out.WriteLine(newcode);
+
+            var read = new StringReader(code);
+            while ((line = read.ReadLine()) != null)
+            {
+                String x = @"\(\""[^\""]+?\)";
+                MatchCollection mc = Regex.Matches(line, x);
+                String s = null, p = null;
+                foreach (Match m in mc)
+                {
+                    s = m.ToString();
+                    p = null;
+                    for (int i = 0; i < s.Length - 1; i++)
+                    {
+
+                        p += s[i];
+                    }
+                    p += '"';
+                    p += ')';
+                    line = line.Replace(s, p);
+                    Console.Out.WriteLine("s -> " + s);
+                    Console.Out.WriteLine("p -> " + p);
+                    Console.Out.WriteLine("final" + line);
+                }
+
+                if (!line.Contains("for") && !line.Contains("while") && !line.Contains("if") && !line.Contains("main") && !line.Contains("include"))
+                {
+                    String trimmed = line;
+                    int l = trimmed.Length - 1;
+                    if (l >= 0)
+                    {
+                        if (trimmed[l] != ';' && trimmed[l] != '{' && trimmed[l] != '}')
+                        {
+                            p = null;
+                            for (int i = 0; i < trimmed.Length; i++)
+                            {
+
+                                p += trimmed[i];
+                            }
+                            p += ';';
+                            line = p;
+                        }
+                    }
+
+                }
+    
+
+                //String y = @"\([^\)]+?\n";
+                //String temp = line + "\\n";
+                //Console.Out.WriteLine(temp);
+                //MatchCollection mc1 = Regex.Matches(line, y, RegexOptions.Singleline);
+                String s1 = null, p1 = null;
+                if (line.Contains('('))
+                {
+                    String m = line.Split('(')[1];
+                    if (!m.Contains(')'))
+                    {
+                        p1 = null;
+                        s1 = m.ToString();
+
+                        for (int i = 0; i < s1.Length - 1; i++)
+                        {
+                            p1 += s1[i];
+                        }
+
+                        if (line.Contains("for") || line.Contains("while") || line.Contains("if"))
+                        {
+                            if (s1[s1.Length - 1] == ';')
+                            {
+                                p1 += ')';
+                            }
+                            else
+                            {
+                                p1 += s1[s1.Length - 1];
+                                p1 += ')';
+                            }
+                        }
+                        else
+                        {
+
+                            p1 += ')';
+                            p1 += s1[s1.Length - 1];
+                        }
+
+                        line = line.Replace(s1, p1);
+                    }
+                }
+                
+                
+                //foreach (Match m in mc1)
+                //{
+                //    p1 = null;
+                //    s1 = m.ToString();
+                //    //s1 = s1.TrimEnd('n');
+                //    //s1 = s1.TrimEnd('\\');
+                    
+                //    for (int i = 0; i < s1.Length - 1; i++)
+                //    {
+                //        p1 += s1[i];
+                //    }
+
+                //    if (line.Contains("for") && line.Contains("while") && line.Contains("if"))
+                //    {
+                //        if (s1[s1.Length - 1] == ';')
+                //        {
+                //            p1 += ')';
+                //        }
+                //        else
+                //        {
+                //            p1 += s1[s1.Length - 1];
+                //            p1 += ')';
+                //        }
+                //    }
+                //    else
+                //    {
+                        
+                //        p1 += ')';
+                //        p1 += s1[s1.Length - 1];
+                //    }
+
+                    
+                //    line = line.Replace(s1, p1);
+                //    Console.Out.WriteLine("s -> " + s1);
+                //    Console.Out.WriteLine("p -> " + p1);
+                //    Console.Out.WriteLine("final" + line);
+                //}
+
+
+                final += line;
+                final += "\n";
+            }
+
+            return final;
         }
 
 
@@ -331,7 +505,7 @@ namespace HandwrittenCodeRecognition
                 //Console.Out.WriteLine(a[i]);
                 if ((a[i] == '.' && a[i + 1] == 'l') || (a[i] == '.' && a[i + 1] == '1') || (a[i] == '.' && a[i + 1] == '"'))
                 {
-                    Console.Out.WriteLine("in");
+                    //Console.Out.WriteLine("in");
                     code += "i";
 
                     i++;
@@ -342,7 +516,7 @@ namespace HandwrittenCodeRecognition
                     i++;
                 }
 
-                else if ((a[i] == '.' && a[i + 1] == '*' && a[i + 2] == '.') || (a[i] == '.' && a[i + 1] == '/' && a[i + 2] == '.'))
+                else if ((a[i] == '.' && a[i + 1] == '*' && a[i + 2] == '.') || (a[i] == '.' && a[i + 1] == '/' && a[i + 2] == '.') || (a[i] == '.' && a[i + 1] == '2' && a[i + 2] == '.'))
                 {
                     code += "%";
                     i += 2;
@@ -359,7 +533,9 @@ namespace HandwrittenCodeRecognition
                     code += "inc";
                     i += 2;
                 }
-
+                else if (a[i] == '“')
+                    code += '"';
+                
                 else
                 {
                     code += a[i];
